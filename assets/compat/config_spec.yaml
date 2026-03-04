@@ -1,0 +1,70 @@
+# Configuration specification for Namecoin ElectrumX on StartOS
+namecoind:
+  type: object
+  name: "Namecoin Core Connection"
+  description: "Connection settings for the Namecoin Core dependency"
+  spec:
+    rpc-user:
+      type: string
+      name: "RPC Username"
+      description: "The RPC username for connecting to Namecoin Core"
+      nullable: false
+      default: "namecoin"
+    rpc-password:
+      type: string
+      name: "RPC Password"
+      description: "The RPC password for connecting to Namecoin Core"
+      nullable: false
+      default: ""
+      masked: true
+    rpc-host:
+      type: string
+      name: "RPC Host"
+      description: "The hostname of the Namecoin Core service. Usually auto-configured by StartOS."
+      nullable: false
+      default: "namecoind.embassy"
+    rpc-port:
+      type: number
+      name: "RPC Port"
+      description: "The RPC port of Namecoin Core"
+      nullable: false
+      default: 8336
+      range: "[1,65535]"
+      integral: true
+performance:
+  type: object
+  name: "Performance"
+  description: "Resource usage and performance tuning"
+  spec:
+    cache-mb:
+      type: number
+      name: "Cache Size (MB)"
+      description: "Amount of memory to use for caching. Larger values improve sync speed but use more RAM. Do not set above 60% of available RAM."
+      nullable: false
+      default: 400
+      range: "[64,4096]"
+      integral: true
+      units: "MB"
+    max-sessions:
+      type: number
+      name: "Max Sessions"
+      description: "Maximum number of concurrent Electrum client connections"
+      nullable: false
+      default: 1000
+      range: "[10,10000]"
+      integral: true
+log-level:
+  type: enum
+  name: "Log Level"
+  description: "Logging verbosity level"
+  values:
+    - debug
+    - info
+    - warning
+    - error
+  default: "info"
+  value-names:
+    debug: "Debug (verbose)"
+    info: "Info (default)"
+    warning: "Warning"
+    error: "Error (minimal)"

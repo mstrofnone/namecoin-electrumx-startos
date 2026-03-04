@@ -1,0 +1,4 @@
+docker-images/
+*.s9pk
+*.tar
+.DS_Store

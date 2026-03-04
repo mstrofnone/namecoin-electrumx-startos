@@ -1,0 +1,7 @@
+Welcome to Namecoin ElectrumX on StartOS!
+
+Server version: $SERVER_VERSION
+Namecoin: Decentralized DNS and Identity
+
+This server is powered by StartOS sovereign computing.
+Learn more at https://start9.com and https://www.namecoin.org

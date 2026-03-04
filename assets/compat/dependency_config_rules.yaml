@@ -1,0 +1,11 @@
+# Dependency configuration rules for Namecoin Core
+# Ensures Namecoin Core is configured correctly for ElectrumX
+- rule: |
+    namecoind:
+      pruning:
+        mode:
+          equals: "disabled"
+          description: "ElectrumX requires a non-pruned (archival) Namecoin Core node"
+      txindex:
+        equals: true
+        description: "ElectrumX requires the transaction index to be enabled"

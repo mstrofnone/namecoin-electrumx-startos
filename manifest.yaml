@@ -1,0 +1,244 @@
+# Namecoin ElectrumX service wrapper for StartOS
+id: namecoin-electrumx
+title: "Namecoin ElectrumX"
+version: 1.4.3.1
+release-notes: |
+  * Initial release of Namecoin ElectrumX for StartOS
+  * Based on upstream Namecoin ElectrumX branch protocol-1.4.3-v1
+  * Electrum protocol server for Namecoin with name script support
+  * Supports SPV verification of name updates with 1-block confirmation
+license: MIT
+wrapper-repo: "https://github.com/mstrofnone/namecoin-electrumx-startos"
+upstream-repo: "https://github.com/namecoin/electrumx"
+support-site: "https://github.com/namecoin/electrumx/issues"
+marketing-site: "https://www.namecoin.org/"
+donation-url: "https://www.namecoin.org/donate/"
+build: ["make"]
+min-os-version: 0.3.5.1
+description:
+  short: Electrum protocol server for Namecoin — enables lightweight wallets to verify names and transactions
+  long: |
+    Namecoin ElectrumX is an Electrum protocol server for the Namecoin blockchain. It indexes
+    the blockchain and serves data to lightweight Electrum-NMC wallet clients, allowing them
+    to verify transactions and perform name lookups without running a full node themselves.
+
+    This fork includes Namecoin-specific enhancements:
+    - Name script indexing for .bit domain lookups
+    - AuxPoW (merged mining) support with checkpointed truncation
+    - Protocol v1.4.3 with 1-block name update confirmation via scriptSig chaining
+    - Optimized MAX_SEND defaults for AuxPoW chains
+
+    ElectrumX requires a fully synced, non-pruned Namecoin Core node to function. It connects
+    to Namecoin Core via RPC and indexes the blockchain into its own LevelDB database. Once
+    synced, it serves Electrum-NMC clients over TCP and SSL.
+assets:
+  license: LICENSE
+  icon: icon.png
+  instructions: instructions.md
+main:
+  type: docker
+  image: main
+  entrypoint: docker_entrypoint.sh
+  args: []
+  mounts:
+    main: /data/electrumx
+    compat: /mnt/assets
+  io-format: yaml
+health-checks:
+  electrum-tcp:
+    name: Electrum TCP
+    success-message: ElectrumX is ready and accepting connections
+    type: docker
+    image: main
+    entrypoint: check-electrum.sh
+    args: []
+    inject: true
+    system: false
+    io-format: yaml
+config:
+  get:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - config
+      - get
+      - /root
+      - "/mnt/assets/config_spec.yaml"
+    mounts:
+      compat: /mnt/assets
+      main: /root
+    io-format: yaml
+  set:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - config
+      - set
+      - namecoin-electrumx
+      - /root
+      - "/mnt/assets/config_rules.yaml"
+    mounts:
+      compat: /mnt/assets
+      main: /root
+    io-format: yaml
+properties:
+  type: docker
+  image: main
+  entrypoint: properties.sh
+  args: []
+  mounts:
+    main: /data/electrumx
+  io-format: yaml
+volumes:
+  main:
+    type: data
+  compat:
+    type: assets
+dependencies:
+  namecoind:
+    version: ">=30.2"
+    requirement:
+      type: required
+    description: Namecoin ElectrumX requires a fully synced, non-pruned Namecoin Core node.
+    config:
+      check:
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - check
+          - namecoin-electrumx
+          - namecoind
+          - /root
+          - "/mnt/assets/dependency_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
+          main: /root
+        io-format: yaml
+      auto-configure:
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - "auto-configure"
+          - namecoin-electrumx
+          - namecoind
+          - /root
+          - "/mnt/assets/dependency_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
+          main: /root
+        io-format: yaml
+interfaces:
+  electrum-tcp:
+    name: Electrum TCP Interface
+    description: Plaintext Electrum protocol for wallet connections
+    tor-config:
+      port-mapping:
+        50001: "50001"
+    lan-config:
+      443:
+        ssl: true
+        internal: 50001
+    ui: false
+    protocols:
+      - tcp
+      - electrum
+  electrum-ssl:
+    name: Electrum SSL Interface
+    description: SSL-encrypted Electrum protocol for wallet connections
+    tor-config:
+      port-mapping:
+        50002: "50002"
+    lan-config: null
+    ui: false
+    protocols:
+      - tcp
+      - electrum
+backup:
+  create:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - duplicity
+      - namecoin-electrumx
+      - /mnt/backup
+      - /data/electrumx
+    mounts:
+      BACKUP: /mnt/backup
+      main: /data/electrumx
+  restore:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - duplicity
+      - namecoin-electrumx
+      - /data/electrumx
+      - /mnt/backup
+    mounts:
+      BACKUP: /mnt/backup
+      main: /data/electrumx
+migrations:
+  from:
+    "*":
+      type: docker
+      image: main
+      entrypoint: migrations.sh
+      args: ["from"]
+      mounts:
+        main: /data/electrumx
+      io-format: yaml
+  to:
+    "*":
+      type: docker
+      image: main
+      entrypoint: migrations.sh
+      args: ["to"]
+      mounts:
+        main: /data/electrumx
+      io-format: yaml
+actions:
+  reindex:
+    name: Rebuild Index
+    description: Deletes the ElectrumX database and rebuilds the index from scratch using Namecoin Core.
+    warning: |
+      This will delete the entire ElectrumX index database and rebuild it from the Namecoin Core
+      node. The reindex process can take several hours depending on your hardware. ElectrumX will
+      be unavailable to clients during this process.
+    allowed-statuses:
+      - running
+      - stopped
+    implementation:
+      type: docker
+      image: main
+      entrypoint: reindex.sh
+      args: []
+      inject: true
+      io-format: yaml
+      mounts:
+        main: /data/electrumx
+alerts:
+  install: |
+    Namecoin ElectrumX requires a fully synced, non-pruned Namecoin Core node. After installation,
+    ElectrumX will need to build its index from the Namecoin blockchain. This initial sync can take
+    several hours depending on your hardware. Ensure you have at least 1 GB of free RAM available.
+  uninstall: |
+    Uninstalling Namecoin ElectrumX will remove its index database. This data can be rebuilt
+    from Namecoin Core, so no funds are at risk. However, rebuilding the index takes time.
+  restore: |
+    Restoring Namecoin ElectrumX will overwrite the current index database.
+  start: |
+    Ensure Namecoin Core is fully synced before starting ElectrumX. If this is the first start,
+    the initial indexing may take several hours. Make sure you have at least 1 GB of free RAM.
