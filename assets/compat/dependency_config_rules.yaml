@@ -3,7 +3,7 @@
 # Rule syntax: StartOS compat bool_expr DSL
 
 # ElectrumX requires non-pruned node with txindex enabled
-- rule: "pruning.mode = \"disabled\""
+- rule: '''pruning.mode = "disabled"'
   description: "ElectrumX requires a non-pruned (archival) Namecoin Core node. Pruning must be disabled."
   suggestions:
     - SET:
