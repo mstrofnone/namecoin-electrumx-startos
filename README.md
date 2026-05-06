@@ -1,6 +1,11 @@
 # Namecoin ElectrumX for StartOS
 
-This is the service wrapper for running [Namecoin ElectrumX](https://github.com/namecoin/electrumx) on [StartOS](https://github.com/Start9Labs/start-os). It packages the Namecoin fork of ElectrumX (branch `protocol-1.4.3-v1`) as a `.s9pk` for installation on any StartOS server.
+This is the service wrapper for running [Namecoin ElectrumX](https://github.com/namecoin/electrumx) on [StartOS](https://github.com/Start9Labs/start-os). It packages the Namecoin fork of ElectrumX (branch `protocol-1.4.3-v1`) as a `.s9pk` for installation on a StartOS server.
+
+> **StartOS version:** This package targets the **v0.3.5.x** generation
+> (YAML manifest + `compat` image). StartOS v0.4.0 (released May 2026) is
+> a complete rewrite with a TypeScript SDK and is **not** compatible.
+> A v0.4 port would require a separate branch.
 
 ## About
 
@@ -27,7 +32,7 @@ Or run `prepare.sh` on a Debian system to install everything automatically.
 ## Building
 
 ```bash
-git clone https://github.com/your-username/namecoin-electrumx-startos.git
+git clone https://github.com/mstrofnone/namecoin-electrumx-startos.git
 cd namecoin-electrumx-startos
 make        # build for all platforms
 make x86    # build for amd64 only
