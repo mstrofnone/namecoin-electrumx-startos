@@ -1,12 +1,16 @@
 # Namecoin ElectrumX service wrapper for StartOS
 id: namecoin-electrumx
 title: "Namecoin ElectrumX"
-version: 1.4.3.1
+version: 1.4.3.2
 release-notes: |
-  * Initial release of Namecoin ElectrumX for StartOS
-  * Based on upstream Namecoin ElectrumX branch protocol-1.4.3-v1
-  * Electrum protocol server for Namecoin with name script support
-  * Supports SPV verification of name updates with 1-block confirmation
+  Packaging fix release. No upstream Namecoin ElectrumX changes.
+
+  * Fix Makefile so `git clone && make` actually builds the s9pk (default target was the dependency-broken `verify`).
+  * Add CI workflow: three-stage pipeline (build-sdk -> per-arch build (x86_64/aarch64) -> pack/verify) that attaches the s9pk to GitHub releases on tag push.
+  * Add Dockerfile.sdk to extract `start-sdk` from the official StartOS v0.3.5.x ISO.
+  * Add .dockerignore and README cleanups.
+
+  Targets StartOS v0.3.5.x. v0.4.0 would need a separate port.
 license: MIT
 wrapper-repo: "https://github.com/mstrofnone/namecoin-electrumx-startos"
 upstream-repo: "https://github.com/namecoin/electrumx"

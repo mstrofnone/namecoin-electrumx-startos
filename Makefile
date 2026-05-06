@@ -1,34 +1,59 @@
 PKG_ID := namecoin-electrumx
 PKG_VERSION := $(shell yq e ".version" manifest.yaml)
-S9PK_PATH := $(shell find . -name $(PKG_ID).s9pk -print 2>/dev/null)
+S9PK := $(PKG_ID).s9pk
+
+ASSETS := \
+	manifest.yaml \
+	LICENSE \
+	instructions.md \
+	icon.png \
+	assets/compat/config_spec.yaml \
+	assets/compat/config_rules.yaml \
+	assets/compat/dependency_config_rules.yaml \
+	assets/compat/banner.txt
+
+SCRIPTS := \
+	docker_entrypoint.sh \
+	check-electrum.sh \
+	properties.sh \
+	migrations.sh \
+	reindex.sh
 
 .DELETE_ON_ERROR:
+.PHONY: all verify clean x86 arm
 
-all: verify
+# Default target: build the s9pk for both architectures.
+all: $(S9PK)
 
-verify: $(PKG_ID).s9pk
-	start-sdk verify s9pk $(S9PK_PATH)
+verify: $(S9PK)
+	start-sdk verify s9pk $(S9PK)
 
 clean:
 	rm -f docker-images/*.tar
-	rm -f $(PKG_ID).s9pk
+	rm -f $(S9PK)
 
-$(PKG_ID).s9pk: manifest.yaml LICENSE instructions.md icon.png docker-images/aarch64.tar docker-images/x86_64.tar
+# Build the s9pk package. Both arch tarballs are required because
+# manifest.yaml does not declare an architecture restriction; if you
+# only want one arch, use the `x86` or `arm` convenience targets.
+$(S9PK): $(ASSETS) $(SCRIPTS) docker-images/aarch64.tar docker-images/x86_64.tar
 	start-sdk pack
 
-docker-images/aarch64.tar: Dockerfile docker_entrypoint.sh check-electrum.sh properties.sh migrations.sh reindex.sh assets/compat/*
+# Build Docker image for ARM64
+docker-images/aarch64.tar: Dockerfile $(SCRIPTS) $(ASSETS)
 	mkdir -p docker-images
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
 		--tag start9/$(PKG_ID)/main:$(PKG_VERSION) \
 		--platform=linux/arm64 \
 		-o type=docker,dest=docker-images/aarch64.tar .
 
-docker-images/x86_64.tar: Dockerfile docker_entrypoint.sh check-electrum.sh properties.sh migrations.sh reindex.sh assets/compat/*
+# Build Docker image for x86_64
+docker-images/x86_64.tar: Dockerfile $(SCRIPTS) $(ASSETS)
 	mkdir -p docker-images
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build \
 		--tag start9/$(PKG_ID)/main:$(PKG_VERSION) \
 		--platform=linux/amd64 \
 		-o type=docker,dest=docker-images/x86_64.tar .
 
+# Convenience targets for single-platform image builds (no s9pk pack).
 x86: docker-images/x86_64.tar
 arm: docker-images/aarch64.tar
