@@ -56,7 +56,7 @@ jobs:
       - name: Pack s9pk for ${{ matrix.arch }}
         run: |
           set -euo pipefail
-          start-cli s9pk pack --arch=${{ matrix.arch }} -o namecoin-electrumx_${{ matrix.arch }}.s9pk
+          start-cli s9pk pack --no-assets --arch=${{ matrix.arch }} -o namecoin-electrumx_${{ matrix.arch }}.s9pk
           ls -la namecoin-electrumx_${{ matrix.arch }}.s9pk
 
       - name: Upload artifact
